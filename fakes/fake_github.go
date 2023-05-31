@@ -74,6 +74,19 @@ type FakeGithub struct {
 		result1 []*resource.PullRequest
 		result2 error
 	}
+	ListTeamMembersStub        func(string) ([]string, error)
+	listTeamMembersMutex       sync.RWMutex
+	listTeamMembersArgsForCall []struct {
+		arg1 string
+	}
+	listTeamMembersReturns struct {
+		result1 []string
+		result2 error
+	}
+	listTeamMembersReturnsOnCall map[int]struct {
+		result1 []string
+		result2 error
+	}
 	PostCommentStub        func(string, string) error
 	postCommentMutex       sync.RWMutex
 	postCommentArgsForCall []struct {
@@ -425,6 +438,69 @@ func (fake *FakeGithub) ListPullRequestsReturnsOnCall(i int, result1 []*resource
 	}{result1, result2}
 }
 
+func (fake *FakeGithub) ListTeamMembers(arg1 string) ([]string, error) {
+	fake.listTeamMembersMutex.Lock()
+	ret, specificReturn := fake.listTeamMembersReturnsOnCall[len(fake.listTeamMembersArgsForCall)]
+	fake.listTeamMembersArgsForCall = append(fake.listTeamMembersArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("ListTeamMembers", []interface{}{arg1})
+	fake.listTeamMembersMutex.Unlock()
+	if fake.ListTeamMembersStub != nil {
+		return fake.ListTeamMembersStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.listTeamMembersReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeGithub) ListTeamMembersCallCount() int {
+	fake.listTeamMembersMutex.RLock()
+	defer fake.listTeamMembersMutex.RUnlock()
+	return len(fake.listTeamMembersArgsForCall)
+}
+
+func (fake *FakeGithub) ListTeamMembersCalls(stub func(string) ([]string, error)) {
+	fake.listTeamMembersMutex.Lock()
+	defer fake.listTeamMembersMutex.Unlock()
+	fake.ListTeamMembersStub = stub
+}
+
+func (fake *FakeGithub) ListTeamMembersArgsForCall(i int) string {
+	fake.listTeamMembersMutex.RLock()
+	defer fake.listTeamMembersMutex.RUnlock()
+	argsForCall := fake.listTeamMembersArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeGithub) ListTeamMembersReturns(result1 []string, result2 error) {
+	fake.listTeamMembersMutex.Lock()
+	defer fake.listTeamMembersMutex.Unlock()
+	fake.ListTeamMembersStub = nil
+	fake.listTeamMembersReturns = struct {
+		result1 []string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeGithub) ListTeamMembersReturnsOnCall(i int, result1 []string, result2 error) {
+	fake.listTeamMembersMutex.Lock()
+	defer fake.listTeamMembersMutex.Unlock()
+	fake.ListTeamMembersStub = nil
+	if fake.listTeamMembersReturnsOnCall == nil {
+		fake.listTeamMembersReturnsOnCall = make(map[int]struct {
+			result1 []string
+			result2 error
+		})
+	}
+	fake.listTeamMembersReturnsOnCall[i] = struct {
+		result1 []string
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeGithub) PostComment(arg1 string, arg2 string) error {
 	fake.postCommentMutex.Lock()
 	ret, specificReturn := fake.postCommentReturnsOnCall[len(fake.postCommentArgsForCall)]
@@ -564,6 +640,8 @@ func (fake *FakeGithub) Invocations() map[string][][]interface{} {
 	defer fake.listModifiedFilesMutex.RUnlock()
 	fake.listPullRequestsMutex.RLock()
 	defer fake.listPullRequestsMutex.RUnlock()
+	fake.listTeamMembersMutex.RLock()
+	defer fake.listTeamMembersMutex.RUnlock()
 	fake.postCommentMutex.RLock()
 	defer fake.postCommentMutex.RUnlock()
 	fake.updateCommitStatusMutex.RLock()

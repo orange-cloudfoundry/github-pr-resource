@@ -10,6 +10,8 @@ import (
 	"github.com/shurcooL/githubv4"
 )
 
+var trustedTeamMembers map[string]bool = map[string]bool{}
+
 // Check (business logic)
 func Check(request CheckRequest, manager Github) (CheckResponse, error) {
 	var response CheckResponse
@@ -73,8 +75,14 @@ Loop:
 			continue
 		}
 
-		// Filter pull request if it does not have the required number of approved review(s).
-		if p.ApprovedReviewCount < request.Source.RequiredReviewApprovals {
+		prAuthorTrusted, err := userTrusted(p.Author.Login, request.Source.TrustedUsers, request.Source.TrustedTeams, manager)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list users in team %v: %s", request.Source.TrustedTeams, err)
+		}
+
+		prApproved := p.ApprovedReviewCount >= request.Source.RequiredReviewApprovals
+
+		if !prAuthorTrusted && !prApproved {
 			continue
 		}
 
@@ -116,6 +124,7 @@ Loop:
 				continue Loop
 			}
 		}
+
 		response = append(response, NewVersion(p))
 	}
 
@@ -130,7 +139,37 @@ Loop:
 	if len(response) != 0 && request.Version.PR == "" {
 		response = CheckResponse{response[len(response)-1]}
 	}
+
 	return response, nil
+}
+
+func userTrusted(user string, trustedUsers, trustedTeams []string, manager Github) (bool, error) {
+	for _, u := range trustedUsers {
+		if user == u {
+			return true, nil
+		}
+	}
+
+	if trustedTeamMembers[user] {
+		return true, nil
+	}
+
+	for _, team := range trustedTeams {
+		teamMembers, err := manager.ListTeamMembers(team)
+		if err != nil {
+			return false, fmt.Errorf("failed to list team members of team %q: %s", trustedTeams, err)
+		}
+
+		for _, u := range teamMembers {
+			trustedTeamMembers[u] = true
+		}
+
+		if trustedTeamMembers[user] {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 // ContainsSkipCI returns true if a string contains [ci skip] or [skip ci].

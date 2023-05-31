@@ -27,6 +27,8 @@ type Source struct {
 	RequiredReviewApprovals int                         `json:"required_review_approvals"`
 	Labels                  []string                    `json:"labels"`
 	States                  []githubv4.PullRequestState `json:"states"`
+	TrustedTeams            []string                    `json:"trusted_teams"`
+	TrustedUsers            []string                    `json:"trusted_users"`
 }
 
 // Validate the source configuration.
@@ -112,6 +114,11 @@ type PullRequestObject struct {
 	State             githubv4.PullRequestState
 	ClosedAt          githubv4.DateTime
 	MergedAt          githubv4.DateTime
+	Author            Actor
+}
+
+type Actor struct {
+	Login string
 }
 
 // UpdatedDate returns the last time a PR was updated, either by commit

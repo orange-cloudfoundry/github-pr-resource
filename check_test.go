@@ -10,30 +10,39 @@ import (
 )
 
 var (
-	testPullRequests = []*resource.PullRequest{
-		createTestPR(1, "master", true, false, 0, nil, false, githubv4.PullRequestStateOpen),
-		createTestPR(2, "master", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
-		createTestPR(3, "master", false, false, 0, nil, true, githubv4.PullRequestStateOpen),
-		createTestPR(4, "master", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
-		createTestPR(5, "master", false, true, 0, nil, false, githubv4.PullRequestStateOpen),
-		createTestPR(6, "master", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
-		createTestPR(7, "develop", false, false, 0, []string{"enhancement"}, false, githubv4.PullRequestStateOpen),
-		createTestPR(8, "master", false, false, 1, []string{"wontfix"}, false, githubv4.PullRequestStateOpen),
-		createTestPR(9, "master", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
-		createTestPR(10, "master", false, false, 0, nil, false, githubv4.PullRequestStateClosed),
-		createTestPR(11, "master", false, false, 0, nil, false, githubv4.PullRequestStateMerged),
-		createTestPR(12, "master", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+	standardTestPRs = []*resource.PullRequest{
+		createTestPR(0, "master", "anonymous", true, false, 0, nil, false, githubv4.PullRequestStateOpen),
+		createTestPR(1, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+		createTestPR(2, "master", "anonymous", false, false, 0, nil, true, githubv4.PullRequestStateOpen),
+		createTestPR(3, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+		createTestPR(4, "master", "anonymous", false, true, 0, nil, false, githubv4.PullRequestStateOpen),
+		createTestPR(5, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+		createTestPR(6, "develop", "anonymous", false, false, 0, []string{"enhancement"}, false, githubv4.PullRequestStateOpen),
+		createTestPR(7, "master", "anonymous", false, false, 1, []string{"wontfix"}, false, githubv4.PullRequestStateOpen),
+		createTestPR(8, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+		createTestPR(9, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateClosed),
+		createTestPR(10, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateMerged),
+		createTestPR(11, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+	}
+	multiTeamTestPRs = []*resource.PullRequest{
+		createTestPR(0, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+		createTestPR(1, "master", "foo-member", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+		createTestPR(2, "master", "bar-member", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
 	}
 )
 
+func ptrTo(i int) *int {
+	return &i
+}
+
 func TestCheck(t *testing.T) {
 	tests := []struct {
-		description  string
-		source       resource.Source
-		version      resource.Version
-		files        [][]string
-		pullRequests []*resource.PullRequest
-		expected     resource.CheckResponse
+		description     string
+		source          resource.Source
+		version         resource.Version
+		files           [][]string
+		pullRequests    []*resource.PullRequest
+		expectedIndexes []int
 	}{
 		{
 			description: "check returns the latest version if there is no previous",
@@ -41,12 +50,9 @@ func TestCheck(t *testing.T) {
 				Repository:  "itsdalmo/test-repository",
 				AccessToken: "oauthtoken",
 			},
-			version:      resource.Version{},
-			pullRequests: testPullRequests,
-			files:        [][]string{},
-			expected: resource.CheckResponse{
-				resource.NewVersion(testPullRequests[1]),
-			},
+			pullRequests:    standardTestPRs,
+			files:           [][]string{},
+			expectedIndexes: []int{1},
 		},
 
 		{
@@ -55,20 +61,10 @@ func TestCheck(t *testing.T) {
 				Repository:  "itsdalmo/test-repository",
 				AccessToken: "oauthtoken",
 			},
-			version:      resource.NewVersion(testPullRequests[1]),
-			pullRequests: testPullRequests,
-			files:        [][]string{},
-			expected: resource.CheckResponse{
-				resource.NewVersion(testPullRequests[11]),
-				resource.NewVersion(testPullRequests[8]),
-				resource.NewVersion(testPullRequests[7]),
-				resource.NewVersion(testPullRequests[6]),
-				resource.NewVersion(testPullRequests[5]),
-				resource.NewVersion(testPullRequests[4]),
-				resource.NewVersion(testPullRequests[3]),
-				resource.NewVersion(testPullRequests[2]),
-				resource.NewVersion(testPullRequests[1]),
-			},
+			version:         resource.NewVersion(standardTestPRs[1]),
+			pullRequests:    standardTestPRs,
+			files:           [][]string{},
+			expectedIndexes: []int{11, 8, 7, 6, 5, 4, 3, 2, 1},
 		},
 
 		{
@@ -78,17 +74,14 @@ func TestCheck(t *testing.T) {
 				AccessToken: "oauthtoken",
 				Paths:       []string{"terraform/*/*.tf", "terraform/*/*/*.tf"},
 			},
-			version:      resource.NewVersion(testPullRequests[3]),
-			pullRequests: testPullRequests,
+			version:      resource.NewVersion(standardTestPRs[3]),
+			pullRequests: standardTestPRs,
 			files: [][]string{
 				{"README.md", "travis.yml"},
 				{"terraform/modules/ecs/main.tf", "README.md"},
 				{"terraform/modules/variables.tf", "travis.yml"},
 			},
-			expected: resource.CheckResponse{
-				resource.NewVersion(testPullRequests[3]),
-				resource.NewVersion(testPullRequests[2]),
-			},
+			expectedIndexes: []int{3, 2},
 		},
 
 		{
@@ -98,17 +91,14 @@ func TestCheck(t *testing.T) {
 				AccessToken: "oauthtoken",
 				IgnorePaths: []string{"*.md", "*.yml"},
 			},
-			version:      resource.NewVersion(testPullRequests[3]),
-			pullRequests: testPullRequests,
+			version:      resource.NewVersion(standardTestPRs[3]),
+			pullRequests: standardTestPRs,
 			files: [][]string{
 				{"README.md", "travis.yml"},
 				{"terraform/modules/ecs/main.tf", "README.md"},
 				{"terraform/modules/variables.tf", "travis.yml"},
 			},
-			expected: resource.CheckResponse{
-				resource.NewVersion(testPullRequests[3]),
-				resource.NewVersion(testPullRequests[2]),
-			},
+			expectedIndexes: []int{3, 2},
 		},
 
 		{
@@ -118,20 +108,9 @@ func TestCheck(t *testing.T) {
 				AccessToken:   "oauthtoken",
 				DisableCISkip: true,
 			},
-			version:      resource.NewVersion(testPullRequests[1]),
-			pullRequests: testPullRequests,
-			expected: resource.CheckResponse{
-				resource.NewVersion(testPullRequests[11]),
-				resource.NewVersion(testPullRequests[8]),
-				resource.NewVersion(testPullRequests[7]),
-				resource.NewVersion(testPullRequests[6]),
-				resource.NewVersion(testPullRequests[5]),
-				resource.NewVersion(testPullRequests[4]),
-				resource.NewVersion(testPullRequests[3]),
-				resource.NewVersion(testPullRequests[2]),
-				resource.NewVersion(testPullRequests[1]),
-				resource.NewVersion(testPullRequests[0]),
-			},
+			version:         resource.NewVersion(standardTestPRs[1]),
+			pullRequests:    standardTestPRs,
+			expectedIndexes: []int{11, 8, 7, 6, 5, 4, 3, 2, 1, 0},
 		},
 
 		{
@@ -141,18 +120,9 @@ func TestCheck(t *testing.T) {
 				AccessToken:  "oauthtoken",
 				IgnoreDrafts: true,
 			},
-			version:      resource.NewVersion(testPullRequests[3]),
-			pullRequests: testPullRequests,
-			expected: resource.CheckResponse{
-				resource.NewVersion(testPullRequests[11]),
-				resource.NewVersion(testPullRequests[8]),
-				resource.NewVersion(testPullRequests[7]),
-				resource.NewVersion(testPullRequests[6]),
-				resource.NewVersion(testPullRequests[5]),
-				resource.NewVersion(testPullRequests[4]),
-				resource.NewVersion(testPullRequests[3]),
-				resource.NewVersion(testPullRequests[1]),
-			},
+			version:         resource.NewVersion(standardTestPRs[3]),
+			pullRequests:    standardTestPRs,
+			expectedIndexes: []int{11, 8, 7, 6, 5, 4, 3, 1},
 		},
 
 		{
@@ -162,19 +132,9 @@ func TestCheck(t *testing.T) {
 				AccessToken:  "oauthtoken",
 				IgnoreDrafts: false,
 			},
-			version:      resource.NewVersion(testPullRequests[3]),
-			pullRequests: testPullRequests,
-			expected: resource.CheckResponse{
-				resource.NewVersion(testPullRequests[11]),
-				resource.NewVersion(testPullRequests[8]),
-				resource.NewVersion(testPullRequests[7]),
-				resource.NewVersion(testPullRequests[6]),
-				resource.NewVersion(testPullRequests[5]),
-				resource.NewVersion(testPullRequests[4]),
-				resource.NewVersion(testPullRequests[3]),
-				resource.NewVersion(testPullRequests[2]),
-				resource.NewVersion(testPullRequests[1]),
-			},
+			version:         resource.NewVersion(standardTestPRs[3]),
+			pullRequests:    standardTestPRs,
+			expectedIndexes: []int{11, 8, 7, 6, 5, 4, 3, 2, 1},
 		},
 
 		{
@@ -184,18 +144,9 @@ func TestCheck(t *testing.T) {
 				AccessToken:  "oauthtoken",
 				DisableForks: true,
 			},
-			version:      resource.NewVersion(testPullRequests[5]),
-			pullRequests: testPullRequests,
-			expected: resource.CheckResponse{
-				resource.NewVersion(testPullRequests[11]),
-				resource.NewVersion(testPullRequests[8]),
-				resource.NewVersion(testPullRequests[7]),
-				resource.NewVersion(testPullRequests[6]),
-				resource.NewVersion(testPullRequests[5]),
-				resource.NewVersion(testPullRequests[3]),
-				resource.NewVersion(testPullRequests[2]),
-				resource.NewVersion(testPullRequests[1]),
-			},
+			version:         resource.NewVersion(standardTestPRs[5]),
+			pullRequests:    standardTestPRs,
+			expectedIndexes: []int{11, 8, 7, 6, 5, 3, 2, 1},
 		},
 
 		{
@@ -205,26 +156,110 @@ func TestCheck(t *testing.T) {
 				AccessToken: "oauthtoken",
 				BaseBranch:  "develop",
 			},
-			version:      resource.Version{},
-			pullRequests: testPullRequests,
-			files:        [][]string{},
-			expected: resource.CheckResponse{
-				resource.NewVersion(testPullRequests[6]),
-			},
+			pullRequests:    standardTestPRs,
+			files:           [][]string{},
+			expectedIndexes: []int{6},
 		},
 
 		{
-			description: "check correctly ignores PRs with no approved reviews when specified",
+			description: "check always allows prs from team members",
+			pullRequests: []*resource.PullRequest{
+				createTestPR(0, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+				createTestPR(1, "master", "foo-member", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+			},
 			source: resource.Source{
 				Repository:              "itsdalmo/test-repository",
 				AccessToken:             "oauthtoken",
 				RequiredReviewApprovals: 1,
+				TrustedTeams:            []string{"foo"},
 			},
-			version:      resource.NewVersion(testPullRequests[8]),
-			pullRequests: testPullRequests,
-			expected: resource.CheckResponse{
-				resource.NewVersion(testPullRequests[7]),
+			expectedIndexes: []int{1},
+		},
+
+		{
+			description:  "check always allows prs from team members from more than one team",
+			pullRequests: multiTeamTestPRs,
+			source: resource.Source{
+				Repository:              "itsdalmo/test-repository",
+				AccessToken:             "oauthtoken",
+				RequiredReviewApprovals: 1,
+				TrustedTeams:            []string{"foo", "bar"},
 			},
+			version:         resource.NewVersion(multiTeamTestPRs[1]),
+			expectedIndexes: []int{2, 1},
+		},
+
+		{
+			description: "check does not allow prs from non-members",
+			pullRequests: []*resource.PullRequest{
+				createTestPR(0, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+			},
+			source: resource.Source{
+				Repository:              "itsdalmo/test-repository",
+				AccessToken:             "oauthtoken",
+				RequiredReviewApprovals: 1,
+				TrustedTeams:            []string{"foo"},
+			},
+			expectedIndexes: nil,
+		},
+
+		{
+			description: "check allows approved prs from non-members",
+			pullRequests: []*resource.PullRequest{
+				createTestPR(0, "master", "anonymous", false, false, 1, nil, false, githubv4.PullRequestStateOpen),
+			},
+			source: resource.Source{
+				Repository:              "itsdalmo/test-repository",
+				AccessToken:             "oauthtoken",
+				RequiredReviewApprovals: 1,
+				TrustedTeams:            []string{"foo"},
+			},
+			expectedIndexes: []int{0},
+		},
+
+		{
+			description: "check always allows approved prs from team members",
+			pullRequests: []*resource.PullRequest{
+				createTestPR(0, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+				createTestPR(1, "master", "foo-member", false, false, 1, nil, false, githubv4.PullRequestStateOpen),
+			},
+			source: resource.Source{
+				Repository:              "itsdalmo/test-repository",
+				AccessToken:             "oauthtoken",
+				RequiredReviewApprovals: 1,
+				TrustedTeams:            []string{"foo"},
+			},
+			expectedIndexes: []int{1},
+		},
+
+		{
+			description: "check always allows prs from trusted users",
+			pullRequests: []*resource.PullRequest{
+				createTestPR(0, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+				createTestPR(1, "master", "dependabot[bot]", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+			},
+			source: resource.Source{
+				Repository:              "itsdalmo/test-repository",
+				AccessToken:             "oauthtoken",
+				RequiredReviewApprovals: 1,
+				TrustedUsers:            []string{"dependabot[bot]"},
+			},
+			expectedIndexes: []int{1},
+		},
+
+		{
+			description: "check always allows approved prs from dependabot",
+			pullRequests: []*resource.PullRequest{
+				createTestPR(0, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+				createTestPR(1, "master", "dependabot[bot]", false, false, 1, nil, false, githubv4.PullRequestStateOpen),
+			},
+			source: resource.Source{
+				Repository:              "itsdalmo/test-repository",
+				AccessToken:             "oauthtoken",
+				RequiredReviewApprovals: 1,
+				TrustedUsers:            []string{"dependabot[bot]"},
+			},
+			expectedIndexes: []int{1},
 		},
 
 		{
@@ -234,12 +269,9 @@ func TestCheck(t *testing.T) {
 				AccessToken: "oauthtoken",
 				Labels:      []string{"enhancement"},
 			},
-			version:      resource.Version{},
-			pullRequests: testPullRequests,
-			files:        [][]string{},
-			expected: resource.CheckResponse{
-				resource.NewVersion(testPullRequests[6]),
-			},
+			pullRequests:    standardTestPRs,
+			files:           [][]string{},
+			expectedIndexes: []int{6},
 		},
 
 		{
@@ -249,12 +281,9 @@ func TestCheck(t *testing.T) {
 				AccessToken: "oauthtoken",
 				States:      []githubv4.PullRequestState{githubv4.PullRequestStateClosed},
 			},
-			version:      resource.Version{},
-			pullRequests: testPullRequests,
-			files:        [][]string{},
-			expected: resource.CheckResponse{
-				resource.NewVersion(testPullRequests[9]),
-			},
+			pullRequests:    standardTestPRs,
+			files:           [][]string{},
+			expectedIndexes: []int{9},
 		},
 
 		{
@@ -264,10 +293,9 @@ func TestCheck(t *testing.T) {
 				AccessToken: "oauthtoken",
 				States:      []githubv4.PullRequestState{githubv4.PullRequestStateOpen},
 			},
-			version:      resource.Version{},
-			pullRequests: testPullRequests[9:11],
-			files:        [][]string{},
-			expected:     resource.CheckResponse(nil),
+			pullRequests:    standardTestPRs[9:11],
+			files:           [][]string{},
+			expectedIndexes: nil,
 		},
 
 		{
@@ -277,13 +305,10 @@ func TestCheck(t *testing.T) {
 				AccessToken: "oauthtoken",
 				States:      []githubv4.PullRequestState{githubv4.PullRequestStateClosed, githubv4.PullRequestStateMerged},
 			},
-			version:      resource.NewVersion(testPullRequests[11]),
-			pullRequests: testPullRequests,
-			files:        [][]string{},
-			expected: resource.CheckResponse{
-				resource.NewVersion(testPullRequests[9]),
-				resource.NewVersion(testPullRequests[10]),
-			},
+			version:         resource.NewVersion(standardTestPRs[11]),
+			pullRequests:    standardTestPRs,
+			files:           [][]string{},
+			expectedIndexes: []int{9, 10},
 		},
 	}
 
@@ -297,7 +322,7 @@ func TestCheck(t *testing.T) {
 			}
 			for i := range tc.pullRequests {
 				for j := range filterStates {
-					if filterStates[j] == tc.pullRequests[i].PullRequestObject.State {
+					if filterStates[j] == tc.pullRequests[i].State {
 						pullRequests = append(pullRequests, tc.pullRequests[i])
 						break
 					}
@@ -309,11 +334,26 @@ func TestCheck(t *testing.T) {
 				github.ListModifiedFilesReturnsOnCall(i, file, nil)
 			}
 
+			github.ListTeamMembersStub = func(teamName string) ([]string, error) {
+				switch teamName {
+				case "foo":
+					return []string{"foo-member"}, nil
+				case "bar":
+					return []string{"bar-member"}, nil
+				}
+				return []string{}, nil
+			}
+
 			input := resource.CheckRequest{Source: tc.source, Version: tc.version}
 			output, err := resource.Check(input, github)
 
+			var expectedOutput resource.CheckResponse
+			for _, idx := range tc.expectedIndexes {
+				expectedOutput = append(expectedOutput, resource.NewVersion(tc.pullRequests[idx]))
+			}
+
 			if assert.NoError(t, err) {
-				assert.Equal(t, tc.expected, output)
+				assert.Equal(t, expectedOutput, output)
 			}
 			assert.Equal(t, 1, github.ListPullRequestsCallCount())
 		})
@@ -572,4 +612,32 @@ func TestIsInsidePath(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCheckTeamMemberCache(t *testing.T) {
+	t.Run("foo", func(t *testing.T) {
+		github := new(fakes.FakeGithub)
+
+		github.ListTeamMembersReturns([]string{"member"}, nil)
+
+		prs := []*resource.PullRequest{
+			createTestPR(0, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+			createTestPR(1, "master", "member", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+			createTestPR(2, "master", "member", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+			createTestPR(3, "master", "member", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+		}
+		github.ListPullRequestsReturns(prs, nil)
+
+		input := resource.CheckRequest{
+			Source: resource.Source{
+				Repository:   "itsdalmo/test-repository",
+				AccessToken:  "oauthtoken",
+				TrustedTeams: []string{"team"},
+			},
+			Version: resource.NewVersion(prs[0]),
+		}
+		_, err := resource.Check(input, github)
+		assert.Equal(t, nil, err)
+		assert.Equal(t, 1, github.ListTeamMembersCallCount())
+	})
 }

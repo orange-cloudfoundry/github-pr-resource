@@ -18,10 +18,12 @@ import (
 )
 
 // Github for testing purposes.
+//
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -o fakes/fake_github.go . Github
 type Github interface {
 	ListPullRequests([]githubv4.PullRequestState) ([]*PullRequest, error)
 	ListModifiedFiles(int) ([]string, error)
+	ListTeamMembers(string) ([]string, error)
 	PostComment(string, string) error
 	GetPullRequest(string, string) (*PullRequest, error)
 	GetChangedFiles(string, string) ([]ChangedFileObject, error)
@@ -48,9 +50,10 @@ func NewGithubClient(s *Source) (*GithubClient, error) {
 	// source: https://github.com/google/go-github/pull/598#issuecomment-333039238
 	var ctx context.Context
 	if s.SkipSSLVerification {
-		insecureClient := &http.Client{Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
+		insecureClient := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
 		}
 		ctx = context.WithValue(context.TODO(), oauth2.HTTPClient, insecureClient)
 	} else {
@@ -178,6 +181,34 @@ func (m *GithubClient) ListPullRequests(prStates []githubv4.PullRequestState) ([
 		vars["prCursor"] = query.Repository.PullRequests.PageInfo.EndCursor
 	}
 	return response, nil
+}
+
+func (m *GithubClient) ListTeamMembers(team string) ([]string, error) {
+	var query struct {
+		Organization struct {
+			Team struct {
+				Members struct {
+					Nodes []struct {
+						Login string
+					}
+				}
+			} `graphql:"team(slug:$teamName)"`
+		} `graphql:"organization(login:$orgName)"`
+	}
+
+	vars := map[string]interface{}{
+		"teamName": githubv4.String(team),
+		"orgName":  githubv4.String(m.Owner),
+	}
+
+	teamMembers := []string{}
+	if err := m.V4.Query(context.Background(), &query, vars); err != nil {
+		return nil, fmt.Errorf("query failed: %w", err)
+	}
+	for _, user := range query.Organization.Team.Members.Nodes {
+		teamMembers = append(teamMembers, user.Login)
+	}
+	return teamMembers, nil
 }
 
 // ListModifiedFiles in a pull request (not supported by V4 API).
