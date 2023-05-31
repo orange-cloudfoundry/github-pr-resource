@@ -1,8 +1,7 @@
 ## Github PR resource
 
-[![Build Status](https://travis-ci.org/telia-oss/github-pr-resource.svg?branch=master)](https://travis-ci.org/telia-oss/github-pr-resource)
-[![Go Report Card](https://goreportcard.com/badge/github.com/telia-oss/github-pr-resource)](https://goreportcard.com/report/github.com/telia-oss/github-pr-resource)
-[![Docker Automated build](https://img.shields.io/docker/automated/teliaoss/github-pr-resource.svg)](https://hub.docker.com/r/loggregatorbot/github-pr-resource/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cloudfoundry-community/github-pr-resource)](https://goreportcard.com/report/github.com/cloudfoundry-community/github-pr-resource)
+[![Docker Automated build](https://img.shields.io/docker/automated/loggregatorbot/github-pr-resource.svg)](https://hub.docker.com/r/loggregatorbot/github-pr-resource/)
 
 [graphql-api]: https://developer.github.com/v4
 [original-resource]: https://github.com/jtarchie/github-pullrequest-resource
