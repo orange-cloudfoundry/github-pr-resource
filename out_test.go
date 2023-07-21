@@ -314,7 +314,7 @@ func TestVariableSubstitution(t *testing.T) {
 			os.Setenv(variableName, variableValue)
 
 			putInput := resource.PutRequest{Source: tc.source, Params: tc.parameters}
-			_, err = resource.Put(putInput, github, dir)
+			_, _ = resource.Put(putInput, github, dir)
 
 			if tc.parameters.TargetURL != "" {
 				if assert.Equal(t, 1, github.UpdateCommitStatusCallCount()) {

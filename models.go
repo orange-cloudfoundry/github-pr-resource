@@ -49,7 +49,7 @@ func (s *Source) Validate() error {
 		case githubv4.PullRequestStateClosed:
 		case githubv4.PullRequestStateMerged:
 		default:
-			return errors.New(fmt.Sprintf("states value \"%s\" must be one of: OPEN, MERGED, CLOSED", state))
+			return fmt.Errorf("states value \"%s\" must be one of: OPEN, MERGED, CLOSED", state)
 		}
 	}
 	return nil
