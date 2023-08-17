@@ -31,10 +31,6 @@ var (
 	}
 )
 
-func ptrTo(i int) *int {
-	return &i
-}
-
 func TestCheck(t *testing.T) {
 	tests := []struct {
 		description     string
