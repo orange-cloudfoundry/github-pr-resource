@@ -27,6 +27,8 @@ type Source struct {
 	RequiredReviewApprovals int                         `json:"required_review_approvals"`
 	Labels                  []string                    `json:"labels"`
 	States                  []githubv4.PullRequestState `json:"states"`
+	TrustedTeams            []string                    `json:"trusted_teams"`
+	TrustedUsers            []string                    `json:"trusted_users"`
 }
 
 // Validate the source configuration.
@@ -71,21 +73,19 @@ type MetadataField struct {
 
 // Version communicated with Concourse.
 type Version struct {
-	PR                  string                    `json:"pr"`
-	Commit              string                    `json:"commit"`
-	CommittedDate       time.Time                 `json:"committed,omitempty"`
-	ApprovedReviewCount string                    `json:"approved_review_count"`
-	State               githubv4.PullRequestState `json:"state"`
+	PR            string                    `json:"pr"`
+	Commit        string                    `json:"commit"`
+	CommittedDate time.Time                 `json:"committed,omitempty"`
+	State         githubv4.PullRequestState `json:"state"`
 }
 
 // NewVersion constructs a new Version.
 func NewVersion(p *PullRequest) Version {
 	return Version{
-		PR:                  strconv.Itoa(p.Number),
-		Commit:              p.Tip.OID,
-		CommittedDate:       p.UpdatedDate().Time,
-		ApprovedReviewCount: strconv.Itoa(p.ApprovedReviewCount),
-		State:               p.State,
+		PR:            strconv.Itoa(p.Number),
+		Commit:        p.Tip.OID,
+		CommittedDate: p.UpdatedDate().Time,
+		State:         p.State,
 	}
 }
 
@@ -114,6 +114,11 @@ type PullRequestObject struct {
 	State             githubv4.PullRequestState
 	ClosedAt          githubv4.DateTime
 	MergedAt          githubv4.DateTime
+	Author            Actor
+}
+
+type Actor struct {
+	Login string
 }
 
 // UpdatedDate returns the last time a PR was updated, either by commit

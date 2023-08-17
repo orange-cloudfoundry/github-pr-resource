@@ -16,7 +16,6 @@ import (
 )
 
 func TestGet(t *testing.T) {
-
 	tests := []struct {
 		description    string
 		source         resource.Source
@@ -35,15 +34,14 @@ func TestGet(t *testing.T) {
 				AccessToken: "oauthtoken",
 			},
 			version: resource.Version{
-				PR:                  "pr1",
-				Commit:              "commit1",
-				CommittedDate:       time.Time{},
-				ApprovedReviewCount: "0",
-				State:               githubv4.PullRequestStateOpen,
+				PR:            "pr1",
+				Commit:        "commit1",
+				CommittedDate: time.Time{},
+				State:         githubv4.PullRequestStateOpen,
 			},
 			parameters:     resource.GetParameters{},
-			pullRequest:    createTestPR(1, "master", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
-			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z","approved_review_count":"0","state":"OPEN"}`,
+			pullRequest:    createTestPR(1, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z","state":"OPEN"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"title","value":"pr1 title"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"},{"name":"author_email","value":"user@example.com"},{"name":"state","value":"OPEN"}]`,
 		},
 		{
@@ -54,15 +52,14 @@ func TestGet(t *testing.T) {
 				GitCryptKey: "gitcryptkey",
 			},
 			version: resource.Version{
-				PR:                  "pr1",
-				Commit:              "commit1",
-				CommittedDate:       time.Time{},
-				ApprovedReviewCount: "0",
-				State:               githubv4.PullRequestStateOpen,
+				PR:            "pr1",
+				Commit:        "commit1",
+				CommittedDate: time.Time{},
+				State:         githubv4.PullRequestStateOpen,
 			},
 			parameters:     resource.GetParameters{},
-			pullRequest:    createTestPR(1, "master", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
-			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z","approved_review_count":"0","state":"OPEN"}`,
+			pullRequest:    createTestPR(1, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z","state":"OPEN"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"title","value":"pr1 title"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"},{"name":"author_email","value":"user@example.com"},{"name":"state","value":"OPEN"}]`,
 		},
 		{
@@ -72,17 +69,16 @@ func TestGet(t *testing.T) {
 				AccessToken: "oauthtoken",
 			},
 			version: resource.Version{
-				PR:                  "pr1",
-				Commit:              "commit1",
-				CommittedDate:       time.Time{},
-				ApprovedReviewCount: "0",
-				State:               githubv4.PullRequestStateOpen,
+				PR:            "pr1",
+				Commit:        "commit1",
+				CommittedDate: time.Time{},
+				State:         githubv4.PullRequestStateOpen,
 			},
 			parameters: resource.GetParameters{
 				IntegrationTool: "rebase",
 			},
-			pullRequest:    createTestPR(1, "master", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
-			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z","approved_review_count":"0","state":"OPEN"}`,
+			pullRequest:    createTestPR(1, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z","state":"OPEN"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"title","value":"pr1 title"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"},{"name":"author_email","value":"user@example.com"},{"name":"state","value":"OPEN"}]`,
 		},
 		{
@@ -92,17 +88,16 @@ func TestGet(t *testing.T) {
 				AccessToken: "oauthtoken",
 			},
 			version: resource.Version{
-				PR:                  "pr1",
-				Commit:              "commit1",
-				CommittedDate:       time.Time{},
-				ApprovedReviewCount: "0",
-				State:               githubv4.PullRequestStateOpen,
+				PR:            "pr1",
+				Commit:        "commit1",
+				CommittedDate: time.Time{},
+				State:         githubv4.PullRequestStateOpen,
 			},
 			parameters: resource.GetParameters{
 				IntegrationTool: "checkout",
 			},
-			pullRequest:    createTestPR(1, "master", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
-			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z","approved_review_count":"0","state":"OPEN"}`,
+			pullRequest:    createTestPR(1, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z","state":"OPEN"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"title","value":"pr1 title"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"},{"name":"author_email","value":"user@example.com"},{"name":"state","value":"OPEN"}]`,
 		},
 		{
@@ -112,17 +107,16 @@ func TestGet(t *testing.T) {
 				AccessToken: "oauthtoken",
 			},
 			version: resource.Version{
-				PR:                  "pr1",
-				Commit:              "commit1",
-				CommittedDate:       time.Time{},
-				ApprovedReviewCount: "0",
-				State:               githubv4.PullRequestStateOpen,
+				PR:            "pr1",
+				Commit:        "commit1",
+				CommittedDate: time.Time{},
+				State:         githubv4.PullRequestStateOpen,
 			},
 			parameters: resource.GetParameters{
 				GitDepth: 2,
 			},
-			pullRequest:    createTestPR(1, "master", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
-			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z","approved_review_count":"0","state":"OPEN"}`,
+			pullRequest:    createTestPR(1, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z","state":"OPEN"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"title","value":"pr1 title"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"},{"name":"author_email","value":"user@example.com"},{"name":"state","value":"OPEN"}]`,
 		},
 		{
@@ -132,16 +126,15 @@ func TestGet(t *testing.T) {
 				AccessToken: "oauthtoken",
 			},
 			version: resource.Version{
-				PR:                  "pr1",
-				Commit:              "commit1",
-				CommittedDate:       time.Time{},
-				ApprovedReviewCount: "0",
-				State:               githubv4.PullRequestStateOpen,
+				PR:            "pr1",
+				Commit:        "commit1",
+				CommittedDate: time.Time{},
+				State:         githubv4.PullRequestStateOpen,
 			},
 			parameters: resource.GetParameters{
 				ListChangedFiles: true,
 			},
-			pullRequest: createTestPR(1, "master", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
+			pullRequest: createTestPR(1, "master", "anonymous", false, false, 0, nil, false, githubv4.PullRequestStateOpen),
 			files: []resource.ChangedFileObject{
 				{
 					Path: "README.md",
@@ -150,7 +143,7 @@ func TestGet(t *testing.T) {
 					Path: "Other.md",
 				},
 			},
-			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z","approved_review_count":"0","state":"OPEN"}`,
+			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z","state":"OPEN"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"title","value":"pr1 title"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"},{"name":"author_email","value":"user@example.com"},{"name":"state","value":"OPEN"}]`,
 			filesString:    "README.md\nOther.md\n",
 		},
@@ -278,7 +271,6 @@ func TestGet(t *testing.T) {
 }
 
 func TestGetSkipDownload(t *testing.T) {
-
 	tests := []struct {
 		description string
 		source      resource.Source
@@ -321,6 +313,7 @@ func TestGetSkipDownload(t *testing.T) {
 func createTestPR(
 	count int,
 	baseName string,
+	author string,
 	skipCI bool,
 	isCrossRepo bool,
 	approvedReviews int,
@@ -361,6 +354,9 @@ func createTestPR(
 			State:             state,
 			ClosedAt:          githubv4.DateTime{Time: time.Now()},
 			MergedAt:          githubv4.DateTime{Time: time.Now()},
+			Author: resource.Actor{
+				Login: author,
+			},
 		},
 		Tip: resource.CommitObject{
 			ID:            fmt.Sprintf("commit%s", n),
