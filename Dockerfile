@@ -1,4 +1,4 @@
-FROM golang:alpine AS builder
+FROM golang AS builder
 ADD . /go/src/github.com/telia-oss/github-pr-resource
 WORKDIR /go/src/github.com/telia-oss/github-pr-resource
 RUN curl -sL https://taskfile.dev/install.sh | sh
