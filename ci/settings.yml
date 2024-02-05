@@ -1,34 +1,44 @@
 ---
 meta:
   name:    github-pr-resource
-  target:  gk
+  release: GitHub Pull-Request Concourse resource
+  target:  gk-plat-devs
   url:     https://ci.gstack.io
 
-  initial_version: 1.0.0
+  initial_version: "0.24.0"
 
   git:
     email:  ((git-commit-email))
     name:   ((git-commit-name))
 
   image:
+    name: (( concat meta.private-registry.host "/gstack/gk-ops" ))
     registry:
-      username: ((docker-registry-username))
-      password: ((docker-registry-password))
+      username: (( grab meta.private-registry.username ))
+      password: (( grab meta.private-registry.password ))
 
   dockerhub:
-    username: ((dockerhub-username))
-    email:    ((dockerhub-email))
-    password: ((dockerhub-password))
-    repository: (( concat meta.github.owner "/" meta.name ))
+    username:   ((dockerhub-username))
+    password:   ((dockerhub-password))
+    org:        cfcommunity
+    repository: (( concat meta.dockerhub.org "/" meta.name ))
+    short_desc:
+      Concourse CI resource for working with Pull-Requests on GitHub
+
+  private-registry:
+    host:       harbor.ci.gstack.io
+    username:   ((private-registry-username))
+    password:   ((private-registry-password))
+    repository: (( concat meta.private-registry.host "/" meta.dockerhub.org "/" meta.name ))
 
   aws:
     bucket:      (( grab meta.pipeline ))
-    region_name: us-east-1
+    region_name: eu-west-3
     access_key:  ((aws-access-key))
     secret_key:  ((aws-secret-key))
 
   github:
-    owner:        
+    owner:        cloudfoundry-community
     repo:         github-pr-resource
     branch:       main
     private_key:  ((github-private-key))
@@ -38,4 +48,274 @@ meta:
     webhook:       ((slack-webhook))
     username:      ((slack-username))
     icon:          ((slack-icon-url))
-    channel:       "#github-pr-resource"
+    channel:       "#oss-pipelines-notifications"
+
+groups:
+  - name: bump
+    jobs:
+      - bump-deps
+
+jobs:
+  - name: build
+    plan:
+      - (( inline ))
+      - in_parallel:
+          - (( append ))
+          - { get: golang-alpine, trigger: true, params: { format: oci } }
+          - { get: alpine-latest, trigger: true, params: { format: oci } }
+
+      - # task: build-docker-image
+        config:
+          inputs:
+            - (( append ))
+            - name: golang-alpine
+            - name: alpine-latest
+        params:
+          IMAGE_ARG_golang: golang-alpine/image.tar
+          IMAGE_ARG_alpine: alpine-latest/image.tar
+
+  - name: build-pr
+    plan:
+      - (( inline ))
+      - in_parallel:
+          - (( append ))
+          - { get: golang-alpine, trigger: true, params: { format: oci } }
+          - { get: alpine-latest, trigger: true, params: { format: oci } }
+
+      - {} # put: git-pull-requests
+
+      - # task: build-docker-image
+        config:
+          inputs:
+            - (( replace ))
+            - name: git-pull-requests
+            - name: golang-alpine
+            - name: alpine-latest
+        params:
+          CONTEXT:          git-pull-requests
+          IMAGE_ARG_golang: golang-alpine/image.tar
+          IMAGE_ARG_alpine: alpine-latest/image.tar
+
+  - name: promote
+    plan:
+      - (( insert after 1 )) # insert after “task: release”
+      - task: append-usage
+        image: image
+        config:
+          platform: linux
+          inputs:  [ name: gh, name: version ]
+          outputs: [ name: gh ]
+          run:
+            path: bash
+            args:
+              - -c
+              - |
+                set -ueo pipefail
+                cat >> gh/notes.md <<EOF
+
+                ### Usage
+
+                \`\`\`yaml
+                resource_types:
+                  - name: pull-request
+                    type: registry-image
+                    source:
+                      repository: ${DOCKERHUB_REPOSITORY}
+                      tag:        "$(< version/number)"
+                \`\`\`
+                EOF
+        params:
+          DOCKERHUB_REPOSITORY: (( concat meta.dockerhub.org "/" meta.name ))
+
+  - name: bump-deps
+    public: true
+    serial: true
+    plan:
+      - in_parallel:
+          - { get: weekly, trigger: true }
+          - { get: git }
+          - { get: gk-automation }
+          - { get: golang-alpine, params: { format: oci } }
+          - { get: alpine-latest, params: { format: oci } }
+          - { get: image }
+          - { get: docker-image-build-task }
+
+      - task: bump-golang-deps
+        image: golang-alpine
+        config:
+          platform: linux
+          inputs:  [ { name: git, path: repo } ]
+          outputs:
+            - name: repo-bumped
+            - name: golang-info
+          run:
+            path: sh
+            args:
+            - -ec
+            - |
+              find "repo" -mindepth 1 -maxdepth 1 -print0 \
+                  | xargs -0 -I{} cp -a {} "repo-bumped"
+              cd "repo-bumped" || exit 115
+
+              awk '/^go /{print $2}' go.mod > ../golang-info/previous-version
+              (
+                  set -x
+                  go_version=$(
+                      go version \
+                      | awk '{sub(/go/,"",$3); sub(/\.[[:digit:]]+$/,"",$3); print $3}'
+                  )
+                  sed -i -Ee "s/^go [[:digit:].]+\$/go ${go_version}/" go.mod
+                  go get -t -u ./...
+                  go mod tidy
+
+                  echo "${go_version}" > ../golang-info/version
+              )
+
+      - task: build-docker-image
+        image: docker-image-build-task
+        privileged: true
+        config:
+          platform: linux
+          inputs:
+            - { name: git, path: "." }
+            - { name: golang-alpine }
+            - { name: alpine-latest }
+          outputs: [ name: built-image ]
+          caches:  [ path: cache ]
+          run:     { path: build }
+          params:
+            IMAGE_ARG_golang: golang-alpine/image.tar
+            IMAGE_ARG_alpine: alpine-latest/image.tar
+
+      - task: generate-messages
+        image: image
+        config:
+          platform: linux
+          inputs:  [ name: golang-info ]
+          outputs: [ name: messages ]
+          run:
+            path: bash
+            args:
+            - -c
+            - |
+              set -ueo pipefail
+              go_prev_ver=$(< golang-info/previous-version)
+              go_curr_ver=$(< golang-info/version)
+
+              version_details="${go_curr_ver}"
+              if [[ ${go_curr_ver} != ${go_prev_ver} ]]; then
+                  version_details="from ${go_prev_ver} to ${go_curr_ver} and its"
+              fi
+              echo "Update Golang ${version_details} dependencies" \
+                  > messages/commit-message
+
+              echo "${PIPELINE_NAME}: successfully bumped Golang ${version_details} dependencies," \
+                "with passing tests! :tada:" \
+                "<${PIPELINE_URL}|Ship it when ready!> ${SUCCESS_MOJI}" \
+                > messages/notif-body
+          params:
+            SUCCESS_MOJI:  (( grab meta.slack.success_moji ))
+            PIPELINE_URL:  (( grab meta.slack.pipeline_url ))
+            PIPELINE_NAME: (( grab meta.pipeline ))
+
+      - task: git-commit
+        image: image
+        file: gk-automation/tasks/git/commit.yml
+        input_mapping:
+          repo:        repo-bumped
+          commit-info: messages
+        params:
+          GIT_COMMIT_NAME:    (( grab meta.git.name ))
+          GIT_COMMIT_EMAIL:   (( grab meta.git.email ))
+          GIT_DIFF_OPTS:      --color-words
+
+      - put: git
+        params:
+          repository: repo-committed
+          rebase:     true
+
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
+    on_success:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text_file: messages/notif-body
+
+resources:
+
+  - name: git
+    check_every: 24h
+    webhook_token: ((gk-concourse-webhook-token))
+
+  - name: git-pull-requests
+    check_every: 24h
+    webhook_token: ((gk-concourse-webhook-token))
+
+  - name: edge
+    source:
+      username:   (( grab meta.private-registry.username ))
+      password:   (( grab meta.private-registry.password ))
+      repository: (( grab meta.private-registry.repository ))
+
+  - name: latest
+    source:
+      username:   (( grab meta.private-registry.username ))
+      password:   (( grab meta.private-registry.password ))
+      repository: (( grab meta.private-registry.repository ))
+
+  - name: version
+    icon: github
+    source:
+      bucket:            (( prune ))
+      region_name:       (( prune ))
+      key:               (( prune ))
+      access_key_id:     (( prune ))
+      secret_access_key: (( prune ))
+      driver:      git
+      uri:         git@github.com:gstackio/gk-pipelines-compass.git
+      branch:      master
+      file:        (( concat "versions/" meta.pipeline ))
+      private_key: ((github-private-key))
+      git_user:    "((git-commit-name)) <((git-commit-email))>"
+
+  - name: golang-alpine
+    type: registry-image
+    icon: docker
+    check_every: 24h
+    source:
+      repository: golang
+      tag:        alpine
+
+  - name: alpine-latest
+    type: registry-image
+    icon: docker
+    check_every: 24h
+    source:
+      repository:        alpine
+      semver_constraint: "< 1970" # Avoid YYYYMMDD tags like '20231219'
+
+  - name: gk-automation
+    type: git
+    icon: github
+    check_every: 24h
+    source:
+      uri:         git@github.com:gstackio/gk-automation.git
+      branch:      master
+      private_key: (( grab meta.github.private_key ))
+
+  - name: weekly
+    type: time
+    icon: alarm
+    source:
+      location: Europe/Paris
+      start:    "3:00"
+      stop:     "4:30"
+      days:     [ Saturday ]
