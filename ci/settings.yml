@@ -61,8 +61,8 @@ jobs:
       - (( inline ))
       - in_parallel:
           - (( append ))
-          - { get: golang-latest, trigger: true, params: { format: oci } }
-          - { get: alpine-latest, trigger: true, params: { format: oci } }
+          - { get: golang-latest, passed: [ bump-deps ], trigger: true, params: { format: oci } }
+          - { get: alpine-latest, passed: [ bump-deps ], trigger: true, params: { format: oci } }
 
       - # task: build-docker-image
         config:
@@ -79,8 +79,8 @@ jobs:
       - (( inline ))
       - in_parallel:
           - (( append ))
-          - { get: golang-latest, trigger: true, params: { format: oci } }
-          - { get: alpine-latest, trigger: true, params: { format: oci } }
+          - { get: golang-latest, passed: [ bump-deps ], trigger: true, params: { format: oci } }
+          - { get: alpine-latest, passed: [ bump-deps ], trigger: true, params: { format: oci } }
 
       - {} # put: git-pull-requests
 
