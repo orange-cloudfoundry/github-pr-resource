@@ -73,9 +73,9 @@ generate notifications over the webhook. So if you have a repository with little
 | `skip_download`      | No       | `true`   | Use with `get_params` in a `put` step to do nothing on the implicit get.           |
 | `integration_tool`   | No       | `rebase` | The integration tool to use, `merge`, `rebase` or `checkout`. Defaults to `merge`. |
 | `git_depth`          | No       | `1`      | Shallow clone the repository using the `--depth` Git option                        |
-| `submodules`       | No       | `true` | Recursively clone git submodules. Defaults to false.                        |
+| `submodules`         | No       | `true`   | Recursively clone git submodules. Defaults to false.                               |
 | `list_changed_files` | No       | `true`   | Generate a list of changed files and save alongside metadata                       |
-| `fetch_tags`       | No       | `true`     | Fetch tags from remote repository                                                  |
+| `fetch_tags`         | No       | `true`   | Fetch tags from remote repository                                                  |
 
 Clones the base (e.g. `master` branch) at the latest commit, and merges the pull request at the specified commit
 into master. This ensures that we are both testing and setting status on the exact commit that was requested in
@@ -89,6 +89,19 @@ requested version and the metadata emitted by `get` are available to your tasks 
 The information in `metadata.json` is also available as individual files in the `.git/resource` directory, e.g. the `base_sha`
 is available as `.git/resource/base_sha`. For a complete list of available (individual) metadata files, please check the code
 [here](https://github.com/telia-oss/github-pr-resource/blob/master/in.go#L66).
+
+- `author`: the user login of the pull request author
+- `author_email`: the e-mail address of the pull request author
+- `base_name`: the base branch of the pull request
+- `base_sha`: the commit of the base branch of the pull request
+- `head_name`: the branch associated with the pull request
+- `head_sha`: the latest commit hash of the branch associated with the pull request
+- `message`: the message of the last commit of the pull request, as designated by `head_sha`
+- `pr`: the pull request ID number
+- `state`: the state of the pull request, e.g. `OPEN`
+- `title`: the title of the pull request
+- `url`: the URL for the pull request
+
 
 When specifying `skip_download` the pull request volume mounted to subsequent tasks will be empty, which is a problem
 when you set e.g. the pending status before running the actual tests. The workaround for this is to use an alias for
@@ -243,6 +256,32 @@ If you are coming from [jtarchie/github-pullrequest-resource][original-resource]
 - `put`:
   - `merge.*`
   - `label`
+
+#### Metadata stored in the `.git` directory
+
+The original resource stores [a bunch of metadata][metadata] related to the
+pull request as `git config`, or plain files in the `.git` directory. This
+resource provide most metadata with possibly different names, and the files
+are to be found in the `.git/reource` directory.
+
+If you were using the metadata stored in Git config, you need to update your
+code. For example `git config --get pullrequest.url` in some Bash code can be
+replaced by `echo $(< .git/resource/url)`.
+
+Here is the list of changes:
+
+- `.git/id` -> `.git/resource/pr`
+- `.git/url` -> `.git/resource/url`
+- `.git/base_branch` -> `.git/resource/base_name`
+- `.git/base_sha` -> `.git/resource/base_sha`
+- `.git/branch` -> `.git/resource/head_name`
+- `.git/head_sha` -> `.git/resource/head_sha`
+- `.git/userlogin` -> `.git/resource/author`
+- `.git/body` -> _no equivalent_
+
+[metadata]: https://github.com/jtarchie/github-pullrequest-resource#in-clone-the-repository-at-the-given-pull-request-ref
+
+#### Possibly incompatible resource history
 
 Note that if you are migrating from the original resource on a Concourse version prior to `v5.0.0`, you might
 see an error `failed to unmarshal request: json: unknown field "ref"`. The solution is to rename the resource
