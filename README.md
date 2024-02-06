@@ -105,7 +105,7 @@ is available as `.git/resource/base_sha`. For a complete list of available (indi
 
 When specifying `skip_download` the pull request volume mounted to subsequent tasks will be empty, which is a problem
 when you set e.g. the pending status before running the actual tests. The workaround for this is to use an alias for
-the `put` (see https://github.com/telia-oss/github-pr-resource/issues/32 for more details).
+the `put` (see telia-oss/github-pr-resource#32 for more details).
 Example here:
 
 ```yaml
@@ -285,4 +285,4 @@ Here is the list of changes:
 
 Note that if you are migrating from the original resource on a Concourse version prior to `v5.0.0`, you might
 see an error `failed to unmarshal request: json: unknown field "ref"`. The solution is to rename the resource
-so that the history is wiped. See [#64](https://github.com/telia-oss/github-pr-resource/issues/64) for details.
+so that the history is wiped. See telia-oss/github-pr-resource#64 for details.
