@@ -1,7 +1,7 @@
 ## Github PR resource
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/cloudfoundry-community/github-pr-resource)](https://goreportcard.com/report/github.com/cloudfoundry-community/github-pr-resource)
-[![Docker Automated build](https://img.shields.io/docker/automated/loggregatorbot/github-pr-resource.svg)](https://hub.docker.com/r/loggregatorbot/github-pr-resource/)
+[![Docker Automated build](https://img.shields.io/docker/automated/cfcommunity/github-pr-resource.svg)](https://hub.docker.com/r/cfcommunity/github-pr-resource/)
 
 [graphql-api]: https://developer.github.com/v4
 [original-resource]: https://github.com/jtarchie/github-pullrequest-resource
@@ -150,7 +150,7 @@ resource_types:
 - name: pull-request
   type: docker-image
   source:
-    repository: loggregatorbot/github-pr-resource
+    repository: cfcommunity/github-pr-resource
 
 resources:
 - name: pull-request
@@ -197,6 +197,11 @@ jobs:
       path: pull-request
       status: success
 ```
+
+Note: the resource image is also available as
+`loggregatorbot/github-pr-resource` but with no versioning scheme and no
+description. The official Docker Hub repository is
+[cfcommunity/github-pr-resource](https://hub.docker.com/r/cfcommunity/github-pr-resource/).
 
 ## Costs
 
