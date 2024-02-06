@@ -38,11 +38,12 @@ meta:
     secret_key:  ((aws-secret-key))
 
   github:
-    owner:        cloudfoundry-community
-    repo:         github-pr-resource
-    branch:       main
-    private_key:  ((github-private-key))
-    access_token: ((github-access-token))
+    owner:          cloudfoundry-community
+    repo:           github-pr-resource
+    branch:         main
+    pr_base_branch: main
+    private_key:    ((github-private-key))
+    access_token:   ((github-access-token))
 
   slack:
     webhook:       ((slack-webhook))
