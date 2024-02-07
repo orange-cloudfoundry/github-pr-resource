@@ -42,6 +42,7 @@ meta:
     repo:           github-pr-resource
     branch:         main
     pr_base_branch: main
+    release_branch: main
     private_key:    ((github-private-key))
     access_token:   ((github-access-token))
 
