@@ -137,13 +137,14 @@ jobs:
           - { get: weekly, trigger: true }
           - { get: git }
           - { get: gk-automation }
+          - { get: golang-runner, resource: golang-latest } # format: rootfs
           - { get: golang-latest, params: { format: oci } }
           - { get: alpine-latest, params: { format: oci } }
           - { get: image }
           - { get: docker-image-build-task }
 
       - task: bump-golang-deps
-        image: golang-latest
+        image: golang-runner
         config:
           platform: linux
           inputs:  [ { name: git, path: repo } ]
