@@ -180,7 +180,7 @@ jobs:
         config:
           platform: linux
           inputs:
-            - { name: git, path: "." }
+            - { name: repo-bumped, path: "." }
             - { name: golang-latest }
             - { name: alpine-latest }
           outputs: [ name: built-image ]
