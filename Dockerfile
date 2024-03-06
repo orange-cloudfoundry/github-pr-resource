@@ -1,10 +1,10 @@
-FROM golang AS builder
+FROM golang:1.21.6 AS builder
 ADD . /go/src/github.com/telia-oss/github-pr-resource
 WORKDIR /go/src/github.com/telia-oss/github-pr-resource
 RUN curl -sL https://taskfile.dev/install.sh | sh /dev/stdin v3.33.1
 RUN ./bin/task build
 
-FROM alpine AS resource
+FROM alpine:3.19.1 AS resource
 COPY --from=builder /go/src/github.com/telia-oss/github-pr-resource/build /opt/resource
 RUN apk add --update --no-cache \
     git \
