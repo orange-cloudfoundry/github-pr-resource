@@ -164,15 +164,18 @@ jobs:
               awk '/^go /{print $2}' go.mod > ../golang-info/previous-version
               (
                   set -x
+                  toolchain_version=$(go version | awk '{print $3}')
                   go_version=$(
-                      go version \
-                      | awk '{sub(/go/,"",$3); sub(/\.[[:digit:]]+$/,"",$3); print $3}'
+                      go version | awk '{sub(/go/,"",$3); print $3}'
                   )
-                  sed -i -Ee "s/^go [[:digit:].]+\$/go ${go_version}/" go.mod
+                  inferred_go_min_version="${go_version%.*}.0"
+                  sed -i -Ee "s/^go [[:digit:].]+\$/go ${inferred_go_min_version}/" go.mod
                   go get -t -u ./...
                   go mod tidy
 
-                  echo "${go_version}" > ../golang-info/version
+                  echo "${toolchain_version}"       > ../golang-info/toolchain-version
+                  echo "${go_version}"              > ../golang-info/version
+                  echo "${inferred_go_min_version}" > ../golang-info/min-version
               )
 
       - task: build-docker-image
