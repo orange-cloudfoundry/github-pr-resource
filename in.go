@@ -81,6 +81,17 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 		}
 	}
 
+	metadataMap := make(map[string]string)
+	for _, d := range metadata {
+		metadataMap[d.Name] = d.Value
+	}
+	if b, err = json.Marshal(metadataMap); err != nil {
+		return nil, fmt.Errorf("failed to marshal map of metadata: %s", err)
+	}
+	if err := ioutil.WriteFile(filepath.Join(path, "metadata-map.json"), b, 0644); err != nil {
+		return nil, fmt.Errorf("failed to write metadata map file: %s", err)
+	}
+
 	switch tool := request.Params.IntegrationTool; tool {
 	case "rebase":
 		if err := git.Rebase(pull.BaseRefName, pull.Tip.OID, request.Params.Submodules); err != nil {
