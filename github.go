@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v58/github"
+	"github.com/google/go-github/v61/github"
 	"github.com/shurcooL/githubv4"
 	"golang.org/x/oauth2"
 )
