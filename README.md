@@ -102,7 +102,15 @@ input. Because the base of the PR is not locked to a specific commit in versions
 requested version and the metadata emitted by `get` are available to your tasks as JSON:
 - `.git/resource/version.json`
 - `.git/resource/metadata.json`
+- `.git/resource/metadata-map.json`
 - `.git/resource/changed_files` (if enabled by `list_changed_files`)
+
+The `metadata.json` file contains an array of objects, one for each key-value
+pair, with a `name` key and a `value` key. In order to support the
+[`load_var` step][load_var_step], another `metadata-map.json` provides the
+same informtion with a plain key-value format.
+
+[load_var_step]: https://concourse-ci.org/load-var-step.html
 
 The information in `metadata.json` is also available as individual files in the `.git/resource` directory, e.g. the `base_sha`
 is available as `.git/resource/base_sha`. For a complete list of available (individual) metadata files, please check the code
