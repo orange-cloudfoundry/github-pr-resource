@@ -1,2 +1,3 @@
 # Default. Unless we have a more specific match.
 *       @telia-oss/golang
+*       @gstackio/staff
