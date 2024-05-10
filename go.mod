@@ -1,7 +1,7 @@
 module github.com/telia-oss/github-pr-resource
 
 require (
-	github.com/google/go-github/v58 v58.0.0
+	github.com/google/go-github/v61 v61.0.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.4.1
 	github.com/shurcooL/githubv4 v0.0.0-20240429030203-be2daab69064
 	github.com/stretchr/testify v1.9.0
