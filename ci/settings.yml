@@ -188,6 +188,7 @@ jobs:
           caches:  [ path: cache ]
           run:     { path: build }
           params:
+            DEBUG: true
             IMAGE_ARG_golang: golang-latest/image.tar
             IMAGE_ARG_alpine: alpine-latest/image.tar
         output_mapping:
