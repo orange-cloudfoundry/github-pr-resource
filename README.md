@@ -16,6 +16,24 @@ Inspired by [the original][original-resource], with some important differences:
 
 Make sure to check out [#migrating](#migrating) to learn more.
 
+
+### Maintainance notice
+
+This project is a fork of [telia-oss/github-pr-resource][telia_repo], which
+hasn't received any maintenance for years, as telia-oss/github-pr-resource#246
+can testify and explain.
+
+As exmplained in [this comment][maintainance_takeover_comment], the project
+here is to take over the maintenance, merge [pending contributions][pending_contributions]
+that have been submitted as PRs to the original repo and bring significant
+features, and at some point build a solution for a growing code base of
+automated tests.
+
+[telia_repo]: https://github.com/telia-oss/github-pr-resource
+[maintainance_takeover_comment]: https://github.com/telia-oss/github-pr-resource/issues/246#issuecomment-2105230468
+[pending_contributions]: https://github.com/telia-oss/github-pr-resource/pulls
+
+
 ## Source Configuration
 
 | Parameter                   | Required | Example                          | Description                                                                                                                                                                                                        |
