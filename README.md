@@ -120,6 +120,7 @@ is available as `.git/resource/base_sha`. For a complete list of available (indi
 - `author_email`: the e-mail address of the pull request author
 - `base_name`: the base branch of the pull request
 - `base_sha`: the commit of the base branch of the pull request
+- `body`: the description of the pull request
 - `head_name`: the branch associated with the pull request
 - `head_sha`: the latest commit hash of the branch associated with the pull request
 - `message`: the message of the last commit of the pull request, as designated by `head_sha`
@@ -291,13 +292,16 @@ If you are coming from [jtarchie/github-pullrequest-resource][original-resource]
 #### Metadata stored in the `.git` directory
 
 The original resource stores [a bunch of metadata][metadata] related to the
-pull request as `git config`, or plain files in the `.git` directory. This
-resource provide most metadata with possibly different names, and the files
-are to be found in the `.git/reource` directory.
+pull request as entries in `.git/config`, or plain files in the `.git/`
+directory.
 
-If you were using the metadata stored in Git config, you need to update your
-code. For example `git config --get pullrequest.url` in some Bash code can be
-replaced by `echo $(< .git/resource/url)`.
+This resource provide all these metadata, but with possibly different names,
+and only as files to be found in the `.git/resource` directory.
+
+With this resource, no entry is added to the `.git/config` file. If you were
+using the metadata stored in Git config, you need to update your code. For
+example `git config --get pullrequest.url` in some Bash code can be replaced
+by `echo $(< .git/resource/url)`.
 
 Here is the list of changes:
 
@@ -308,7 +312,7 @@ Here is the list of changes:
 - `.git/branch` -> `.git/resource/head_name`
 - `.git/head_sha` -> `.git/resource/head_sha`
 - `.git/userlogin` -> `.git/resource/author`
-- `.git/body` -> _no equivalent_
+- `.git/body` -> `.git/resource/body`
 
 [metadata]: https://github.com/jtarchie/github-pullrequest-resource#in-clone-the-repository-at-the-given-pull-request-ref
 
