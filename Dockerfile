@@ -1,5 +1,5 @@
-ARG golang
-ARG alpine
+ARG golang="golang:1.21.6"
+ARG alpine="alpine:3.19.1"
 
 
 
