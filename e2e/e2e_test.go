@@ -17,7 +17,7 @@ import (
 
 	resource "github.com/telia-oss/github-pr-resource"
 
-	"github.com/google/go-github/v42/github"
+	"github.com/google/go-github/v61/github"
 	"github.com/shurcooL/githubv4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -103,6 +103,7 @@ type PullRequestObject struct {
 	ID          string
 	Number      int
 	Title       string
+	Body        string
 	URL         string
 	BaseRefName string
 	HeadRefName string

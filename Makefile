@@ -16,10 +16,13 @@ e2e: test
 	go test -race -v ./... -tags=e2e
 
 check: cmd/check/main.go
+	CGO_ENABLED=0 \
 	go build -o "build/check" -ldflags="-s -w" -v "cmd/check/main.go"
 
 in: cmd/in/main.go
+	CGO_ENABLED=0 \
 	go build -o "build/in" -ldflags="-s -w" -v "cmd/in/main.go"
 
 out: cmd/out/main.go
+	CGO_ENABLED=0 \
 	go build -o "build/out" -ldflags="-s -w" -v "cmd/out/main.go"

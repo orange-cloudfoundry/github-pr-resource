@@ -16,6 +16,24 @@ Inspired by [the original][original-resource], with some important differences:
 
 Make sure to check out [#migrating](#migrating) to learn more.
 
+
+### Maintainance notice
+
+This project is a fork of [telia-oss/github-pr-resource][telia_repo], which
+hasn't received any maintenance for years, as telia-oss/github-pr-resource#246
+can testify and explain.
+
+As exmplained in [this comment][maintainance_takeover_comment], the project
+here is to take over the maintenance, merge [pending contributions][pending_contributions]
+that have been submitted as PRs to the original repo and bring significant
+features, and at some point build a solution for a growing code base of
+automated tests.
+
+[telia_repo]: https://github.com/telia-oss/github-pr-resource
+[maintainance_takeover_comment]: https://github.com/telia-oss/github-pr-resource/issues/246#issuecomment-2105230468
+[pending_contributions]: https://github.com/telia-oss/github-pr-resource/pulls
+
+
 ## Source Configuration
 
 | Parameter                   | Required | Example                          | Description                                                                                                                                                                                                        |
@@ -84,7 +102,15 @@ input. Because the base of the PR is not locked to a specific commit in versions
 requested version and the metadata emitted by `get` are available to your tasks as JSON:
 - `.git/resource/version.json`
 - `.git/resource/metadata.json`
+- `.git/resource/metadata-map.json`
 - `.git/resource/changed_files` (if enabled by `list_changed_files`)
+
+The `metadata.json` file contains an array of objects, one for each key-value
+pair, with a `name` key and a `value` key. In order to support the
+[`load_var` step][load_var_step], another `metadata-map.json` provides the
+same informtion with a plain key-value format.
+
+[load_var_step]: https://concourse-ci.org/load-var-step.html
 
 The information in `metadata.json` is also available as individual files in the `.git/resource` directory, e.g. the `base_sha`
 is available as `.git/resource/base_sha`. For a complete list of available (individual) metadata files, please check the code
@@ -94,6 +120,7 @@ is available as `.git/resource/base_sha`. For a complete list of available (indi
 - `author_email`: the e-mail address of the pull request author
 - `base_name`: the base branch of the pull request
 - `base_sha`: the commit of the base branch of the pull request
+- `body`: the description of the pull request
 - `head_name`: the branch associated with the pull request
 - `head_sha`: the latest commit hash of the branch associated with the pull request
 - `message`: the message of the last commit of the pull request, as designated by `head_sha`
@@ -265,13 +292,16 @@ If you are coming from [jtarchie/github-pullrequest-resource][original-resource]
 #### Metadata stored in the `.git` directory
 
 The original resource stores [a bunch of metadata][metadata] related to the
-pull request as `git config`, or plain files in the `.git` directory. This
-resource provide most metadata with possibly different names, and the files
-are to be found in the `.git/reource` directory.
+pull request as entries in `.git/config`, or plain files in the `.git/`
+directory.
 
-If you were using the metadata stored in Git config, you need to update your
-code. For example `git config --get pullrequest.url` in some Bash code can be
-replaced by `echo $(< .git/resource/url)`.
+This resource provide all these metadata, but with possibly different names,
+and only as files to be found in the `.git/resource` directory.
+
+With this resource, no entry is added to the `.git/config` file. If you were
+using the metadata stored in Git config, you need to update your code. For
+example `git config --get pullrequest.url` in some Bash code can be replaced
+by `echo $(< .git/resource/url)`.
 
 Here is the list of changes:
 
@@ -282,7 +312,7 @@ Here is the list of changes:
 - `.git/branch` -> `.git/resource/head_name`
 - `.git/head_sha` -> `.git/resource/head_sha`
 - `.git/userlogin` -> `.git/resource/author`
-- `.git/body` -> _no equivalent_
+- `.git/body` -> `.git/resource/body`
 
 [metadata]: https://github.com/jtarchie/github-pullrequest-resource#in-clone-the-repository-at-the-given-pull-request-ref
 

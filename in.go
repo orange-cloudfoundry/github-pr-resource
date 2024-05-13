@@ -43,6 +43,7 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 	var metadata Metadata
 	metadata.Add("pr", strconv.Itoa(pull.Number))
 	metadata.Add("title", pull.Title)
+	metadata.Add("body", pull.Body)
 	metadata.Add("url", pull.URL)
 	metadata.Add("head_name", pull.HeadRefName)
 	metadata.Add("head_sha", pull.Tip.OID)
@@ -79,6 +80,17 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 		if err := ioutil.WriteFile(filepath.Join(path, filename), content, 0644); err != nil {
 			return nil, fmt.Errorf("failed to write metadata file %s: %s", filename, err)
 		}
+	}
+
+	metadataMap := make(map[string]string)
+	for _, d := range metadata {
+		metadataMap[d.Name] = d.Value
+	}
+	if b, err = json.Marshal(metadataMap); err != nil {
+		return nil, fmt.Errorf("failed to marshal map of metadata: %s", err)
+	}
+	if err := ioutil.WriteFile(filepath.Join(path, "metadata-map.json"), b, 0644); err != nil {
+		return nil, fmt.Errorf("failed to write metadata map file: %s", err)
 	}
 
 	switch tool := request.Params.IntegrationTool; tool {
